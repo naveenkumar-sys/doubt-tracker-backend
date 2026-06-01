@@ -1,0 +1,422 @@
+# PROJECT_CONTEXT.md
+
+## Project Overview
+
+Project Name:
+Academic Knowledge & Resolution Platform
+
+Project Type:
+College Knowledge Management System
+
+Primary Goal:
+Build a centralized platform where academic doubts are stored, searched, answered, and reused instead of being repeatedly answered every semester.
+
+The system should gradually become a permanent academic knowledge base for the institution.
+
+This is NOT a chatbot.
+
+This is NOT an AI-first application.
+
+The primary goal is knowledge retention and faculty workload reduction.
+
+AI is only used later for report summarization.
+
+---
+
+# Business Problem
+
+Current Situation:
+
+* Students repeatedly ask the same doubts every semester.
+* Faculty repeatedly answer the same questions.
+* Knowledge gets lost in:
+
+  * WhatsApp groups
+  * Personal chats
+  * Emails
+  * Classroom discussions
+
+Consequences:
+
+* Faculty time is wasted.
+* Students cannot easily find previous answers.
+* Departments cannot identify difficult topics.
+* Knowledge is not retained across academic years.
+
+Solution:
+
+Create a searchable academic knowledge repository where:
+
+1. Students search first.
+2. Existing answers are reused.
+3. New doubts are answered only when necessary.
+4. Every answer becomes part of the institutional knowledge base.
+
+---
+
+# System Roles
+
+## Admin
+
+Responsibilities:
+
+* Create colleges
+* Create departments
+* Create HOD accounts
+* Manage system-wide settings
+* View global analytics
+
+Admin exists above all departments.
+
+Admin does not answer doubts.
+
+---
+
+## HOD
+
+Responsibilities:
+
+* Manage faculty within department
+* Manage students within department
+* View department analytics
+* Monitor trends
+* Receive weekly reports
+
+HOD can only access data belonging to their department.
+
+Example:
+
+HOD of CSE can manage CSE users only.
+
+---
+
+## Faculty
+
+Responsibilities:
+
+* View pending doubts
+* Answer doubts
+* Mark doubts as resolved
+* View previously resolved doubts
+
+Faculty only work within their department and assigned subjects.
+
+---
+
+## Student
+
+Responsibilities:
+
+* Search existing doubts
+* View answers
+* Create new doubts
+* Track submitted doubts
+
+Students should be encouraged to search before posting.
+
+---
+
+# Core Workflow
+
+Student Login
+|
+V
+Search Existing Doubts
+|
+|
+Found?
+/          
+Yes         No
+|            |
+View       Create
+Answer     Doubt
+|            |
+|        Faculty
+|        Answers
+|            |
+|        Knowledge
+|        Base Grows
+\            /
+|
+V
+Department Analytics
+|
+V
+Weekly HOD Report
+
+---
+
+# Product Philosophy
+
+The system should prioritize:
+
+1. Search Before Create
+2. Knowledge Reuse
+3. Analytics
+4. Department Insights
+
+The system should NOT prioritize:
+
+* AI chat
+* AI assistants
+* AI generated answers
+
+Those may be future enhancements.
+
+---
+
+# Multi-Tenant Vision
+
+Current Target:
+
+Single College
+
+Future Target:
+
+Multiple Colleges
+
+Architecture should allow future support for:
+
+College
+-> Department
+-> HOD
+-> Faculty
+-> Students
+
+Every major entity should eventually support college ownership.
+
+---
+
+# Department Structure
+
+Department is a separate entity.
+
+Examples:
+
+* CSE
+* ECE
+* EEE
+* MECH
+* CIVIL
+
+Users do not store department names directly.
+
+Users store departmentId.
+
+Reason:
+
+Department names may change.
+
+Relationships remain stable through IDs.
+
+---
+
+# User Model Expectations
+
+Common Fields:
+
+* name
+* email
+* password
+* role
+* departmentId
+* isActive
+* lastLoginAt
+
+Role Values:
+
+* admin
+* hod
+* faculty
+* student
+
+---
+
+# Subject Ownership
+
+Faculty can teach multiple subjects.
+
+Students belong to a department and semester.
+
+Subjects belong to departments.
+
+Examples:
+
+CSE
+-> DBMS
+-> Java
+-> Operating Systems
+
+ECE
+-> Digital Electronics
+-> Signals and Systems
+
+---
+
+# Doubt Lifecycle
+
+Draft (optional)
+|
+Pending
+|
+In Progress
+|
+Resolved
+|
+Closed
+
+Definitions:
+
+Pending:
+Faculty has not started.
+
+In Progress:
+Faculty is working.
+
+Resolved:
+Answer provided.
+
+Closed:
+Student accepts answer or issue archived.
+
+---
+
+# Search Strategy
+
+Version 1:
+
+MongoDB Text Search
+
+Search Fields:
+
+* title
+* description
+* subject
+* topic
+
+Workflow:
+
+Student submits query
+|
+Search Database
+|
+Return Similar Doubts
+|
+Student decides:
+Reuse or Create New
+
+No AI embeddings in Version 1.
+
+---
+
+# Notifications
+
+Examples:
+
+Student creates doubt:
+-> Notify faculty
+
+Faculty answers:
+-> Notify student
+
+HOD report generated:
+-> Notify HOD
+
+Future:
+Email + In-App Notifications
+
+---
+
+# Analytics Requirements
+
+Track:
+
+* Total doubts
+* Pending doubts
+* Resolved doubts
+* Average resolution time
+* Most discussed subjects
+* Most discussed topics
+* Faculty response metrics
+
+Analytics are department-specific.
+
+---
+
+# AI Usage
+
+AI is NOT used for:
+
+* Answer generation
+* Similarity search
+* Daily operations
+
+AI is ONLY used for:
+
+Weekly report summarization.
+
+Example:
+
+Raw Metrics
+|
+V
+LLM Summary
+|
+V
+Email to HOD
+
+---
+
+# Development Priorities
+
+Phase 1:
+
+Authentication
+Authorization
+Roles
+Departments
+Subjects
+
+Phase 2:
+
+Doubt Management
+Answer Management
+Search
+
+Phase 3:
+
+Notifications
+Analytics
+
+Phase 4:
+
+Weekly Reports
+AI Summaries
+
+---
+
+# Coding Expectations
+
+Backend Stack:
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+
+Architecture Style:
+
+* Controller Layer
+* Service Layer
+* Repository/Data Layer
+* Validation Layer
+
+Requirements:
+
+* Separation of concerns
+* Reusable services
+* Scalable folder structure
+* Production-grade error handling
+* Consistent API responses
+
+Whenever making architectural decisions, prioritize maintainability, scalability, and clean backend design.
