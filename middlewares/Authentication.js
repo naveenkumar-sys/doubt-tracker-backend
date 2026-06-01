@@ -24,7 +24,7 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     const user = await User.findById(decodedToken.userId);
 
     if (!user || !user.isActive) {

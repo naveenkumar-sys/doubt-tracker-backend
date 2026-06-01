@@ -464,3 +464,24 @@ Student
   -> View answer
   -> Accept answer
   -> Doubt becomes closed and reusable
+
+
+# Middlewares  Logic
+  Authentication.js
+  -> reads and verifies JWT
+  -> loads active user
+  -> attaches user to req.user
+
+Authorization.js
+  -> checks permitted roles
+  -> supports Admin-only and Admin-or-HOD routes
+
+Validation.js
+  -> returns frontend request validation errors
+
+LoginRateLimiter.js
+  -> limits repeated login attempts
+
+ErrorHandler.js
+  -> handles 404 routes
+  -> formats application and database errors
