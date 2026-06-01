@@ -63,6 +63,7 @@ Responsibilities:
 * Create colleges
 * Create departments
 * Create HOD accounts
+* Optionally create faculty or student accounts for support purposes
 * Manage system-wide settings
 * View global analytics
 
@@ -76,8 +77,8 @@ Admin does not answer doubts.
 
 Responsibilities:
 
-* Manage faculty within department
-* Manage students within department
+* Create and manage faculty accounts within their own department
+* Create and manage student accounts within their own department
 * View department analytics
 * Monitor trends
 * Receive weekly reports
@@ -87,6 +88,15 @@ HOD can only access data belonging to their department.
 Example:
 
 HOD of CSE can manage CSE users only.
+
+User creation boundaries:
+
+* Admin can create colleges, departments, HOD accounts, and any user account when support is required.
+* HOD can create faculty and student accounts only.
+* When an HOD creates a user, the backend assigns collegeId and departmentId from the logged-in HOD account.
+* The backend must not trust collegeId or departmentId submitted by an HOD from the frontend.
+* HOD cannot create admin accounts, HOD accounts, or users in another department.
+* Faculty and students cannot create user accounts.
 
 ---
 
