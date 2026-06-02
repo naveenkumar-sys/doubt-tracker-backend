@@ -4,11 +4,11 @@ import User from "../models/UserModel.js";
 // Middleware to authenticate users based on JWT token in Authorization header or cookies , if token is valid, attaches user object to req.user and calls next(), otherwise returns 401 error
 const getTokenFromRequest = (req) => {
   const authorizationHeader = req.headers.authorization;
-
+  // first check whether token in header as bearer token
   if (authorizationHeader?.startsWith("Bearer ")) {
     return authorizationHeader.split(" ")[1];
   }
-
+  // then check whether token in cookies if thistrue it return the token from cookies
   return req.cookies?.accessToken;
 };
 

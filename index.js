@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import connectDB from "./database/dbConfig.js";
 import { errorHandler, notFoundHandler } from "./middlewares/ErrorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
+import collegeRoutes from "./routes/collegeRoutes.js";
+import departmentRoutes from "./routes/departmentRoutes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -33,7 +35,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-
+app.use("/api/colleges", collegeRoutes);
+app.use("/api/departments", departmentRoutes);
 // Error handling middleware , why bottom  beacuse we want to handle errors first and then send the response
 app.use(notFoundHandler);
 app.use(errorHandler);
