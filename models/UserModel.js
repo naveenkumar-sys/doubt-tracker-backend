@@ -44,14 +44,14 @@ const userSchema = new mongoose.Schema(
       },
       index: true,
     },
-    semester: {
-      type: Number,
-      required() {
-        return this.role === "student";
-      },
-      min: 1,
-      max: 12,
-    },
+    // semester: {
+    //   type: Number,
+    //   required() {
+    //     return this.role === "student";
+    //   },
+    //   min: 1,
+    //   max: 12,
+    // },
     subjectIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
