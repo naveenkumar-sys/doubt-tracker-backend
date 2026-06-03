@@ -12,6 +12,7 @@ import departmentRoutes from "./routes/departmentRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import subjectRoutes from "./routes/subjectRoutes.js";
 import doubtRoutes from "./routes/doubtRoutes.js";
+import answerRoutes from "./routes/answerRoutes.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -43,6 +44,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/doubts", doubtRoutes);
+app.use("/api/answers", answerRoutes);
 // Error handling middleware , why bottom  beacuse we want to handle errors first and then send the response
 app.use(notFoundHandler);
 app.use(errorHandler);
