@@ -10,7 +10,6 @@ const accessTokenCookieOptions = {
   sameSite: "strict",
   maxAge: 15 * 60 * 1000,
 };
-
 // refresh token cookie options, refresh tokens are typically set to expire after a longer period of time (e.g., 7 days) compared to access tokens (e.g., 15 minutes) because they are used to obtain new access tokens without requiring the user to log in again, this allows for a better user experience while still maintaining security by limiting the lifespan of access tokens and allowing users to stay logged in for longer periods without having to re-authenticate frequently.
 const refreshTokenCookieOptions = {
   httpOnly: true,
@@ -44,7 +43,6 @@ const createRefreshToken = (userId) => {
     expiresIn: "7d",
   });
 };
-
 // Helper function to format user data for response, this function takes a user object as input and returns a formatted user object with selected fields that are safe to include in API responses, this helps to ensure that sensitive information such as the user's password is not included in the response while still providing relevant user information to the client.
 const formatUser = (user) => ({
   id: user._id,
@@ -58,7 +56,6 @@ const formatUser = (user) => ({
   isActive: user.isActive,
   lastLoginAt: user.lastLoginAt,
 });
-
 // Login controller function that handles user login requests, it validates the user's email and password, checks if the user account is active, updates the last login time, creates access and refresh tokens, clears login attempts for the user's IP address, sets the tokens in cookies, and returns a success response with the user data and access token, this function is responsible for authenticating users and providing them with the necessary tokens to access protected routes in the application.
 const login = async (req, res, next) => {
   try {
@@ -175,7 +172,6 @@ const refreshAccessToken = async (req, res, next) => {
         message: "Invalid or expired refresh token",
       });
     }
-
     next(error);
   }
 };

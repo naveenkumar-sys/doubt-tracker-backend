@@ -27,13 +27,13 @@ const subjectSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    semester: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 12,
-      index: true,
-    },
+    // semester: {
+    //   type: Number,
+    //   required: true,
+    //   min: 1,
+    //   max: 12,
+    //   index: true,
+    // },
     facultyIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
