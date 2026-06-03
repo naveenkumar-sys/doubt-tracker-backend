@@ -48,7 +48,8 @@ export const createUser = async (req, res, next) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
+        //If admin  create hod means department and college id are from req.body
+        //If hod create student and faculty means department and college id are from loggedInUser
         const user = await User.create({ 
             name, 
             email, 
@@ -67,3 +68,20 @@ export const createUser = async (req, res, next) => {
         next(error);
     }
 };
+
+
+//update user status
+export const updateUserStatus = async(req,res,next)=>{
+    try {
+        const {id}=req.params;
+        const {isActive}=req.body;
+        const user=await User.findByIdAndUpdate(id,{isActive},{new:true});
+        if(!user){
+            return res.status(404).json({success:false,message:"User not found"});
+        }
+        return res.status(200).json({success:true,message:"User status updated successfully",data:{user}});
+    } catch (error) {
+        next(error);
+        
+    }
+}

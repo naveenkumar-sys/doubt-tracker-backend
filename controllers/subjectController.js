@@ -47,4 +47,35 @@ const getSubjectsByDepartment = async (req, res, next) => {
     }
 };
 
-export { createSubject, getSubjectsByDepartment };
+//update subject status
+const updateSubjectStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        const subject = await Subject.findById(id);
+
+        if (!subject) {
+            return res.status(404).json({
+                success: false,
+                message: "Subject not found",
+            });
+        }
+
+        subject.isActive = isActive;
+        await subject.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Subject status updated successfully",
+            data: {
+                subject,
+            },
+        });
+    } catch (error) {
+        // Pass the error to the error handling middleware to handle it in a centralized way and return an appropriate response to the client
+        next(error);
+    }
+};
+
+export { createSubject, getSubjectsByDepartment, updateSubjectStatus };
