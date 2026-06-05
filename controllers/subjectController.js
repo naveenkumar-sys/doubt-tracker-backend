@@ -1,10 +1,11 @@
 import Subject from "../models/subjectsModel.js";
+import User from "../models/UserModel.js";
 
 // Create a new subject
 // Only HOD can create subjects - collegeId and departmentId are auto-assigned from their session
 const createSubject = async (req, res, next) => {
     try {
-        const { name, code } = req.body;
+        const { name, code, semester } = req.body;
         const loggedInUser = req.user; // From authenticate middleware (HOD)
 
         // Auto-assign collegeId and departmentId from the logged-in HOD's session
@@ -19,7 +20,7 @@ const createSubject = async (req, res, next) => {
             return res.status(409).json({ success: false, message: "Subject with this code already exists in your department." });
         }
         // Create the subject
-        const newSubject = await Subject.create({ name, code, collegeId, departmentId });
+        const newSubject = await Subject.create({ name, code, semester, collegeId, departmentId });
 
         return res.status(201).json({
             success: true,
@@ -36,7 +37,22 @@ const getSubjectsByDepartment = async (req, res, next) => {
     try {
         const { departmentId } = req.params;
 
-        const subjects = await Subject.find({ departmentId }).sort({ createdAt: -1 });
+        const loggedInUser = req.user;
+
+        if (loggedInUser.role !== "admin" && loggedInUser.departmentId.toString() !== departmentId) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to view subjects outside your department",
+            });
+        }
+
+        const filter = { departmentId };
+
+        if (loggedInUser.role !== "admin") {
+            filter.collegeId = loggedInUser.collegeId;
+        }
+
+        const subjects = await Subject.find(filter).sort({ createdAt: -1 });
 
         return res.status(200).json({
             success: true,
@@ -62,20 +78,76 @@ const updateSubjectStatus = async (req, res, next) => {
             });
         }
 
-        subject.isActive = isActive;
-        await subject.save();
+        if (req.user.departmentId.toString() !== subject.departmentId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to update subjects outside your department",
+            });
+        }
+
+        const updatedSubject = await Subject.findByIdAndUpdate(
+            id,
+            { isActive },
+            { new: true }
+        );
 
         return res.status(200).json({
             success: true,
             message: "Subject status updated successfully",
             data: {
-                subject,
+                subject: updatedSubject,
             },
         });
     } catch (error) {
-        // Pass the error to the error handling middleware to handle it in a centralized way and return an appropriate response to the client
         next(error);
     }
 };
 
-export { createSubject, getSubjectsByDepartment, updateSubjectStatus };
+const assignFacultyToSubject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { facultyId } = req.body;
+        const subject = await Subject.findById(id);
+
+        if (!subject) {
+            return res.status(404).json({ success: false, message: "Subject not found" });
+        }
+
+        if (req.user.departmentId.toString() !== subject.departmentId.toString()) {
+            return res.status(403).json({ success: false, message: "Not authorized to assign faculty to this subject" });
+        }
+
+        const faculty = await User.findOne({
+            _id: facultyId,
+            role: "faculty",
+            collegeId: req.user.collegeId,
+            departmentId: req.user.departmentId,
+            isActive: true,
+        });
+
+        if (!faculty) {
+            return res.status(404).json({ success: false, message: "Active faculty not found in your department" });
+        }
+
+        if (!subject.facultyIds.some((idValue) => idValue.toString() === faculty._id.toString())) {
+            subject.facultyIds.push(faculty._id);
+        }
+
+        if (!faculty.subjectIds.some((idValue) => idValue.toString() === subject._id.toString())) {
+            faculty.subjectIds.push(subject._id);
+        }
+
+        await subject.save();
+        await faculty.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Faculty assigned to subject successfully",
+            data: { subject },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { assignFacultyToSubject, createSubject, getSubjectsByDepartment, updateSubjectStatus };

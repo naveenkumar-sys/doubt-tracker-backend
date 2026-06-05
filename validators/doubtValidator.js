@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param, query } from "express-validator";
 
 const createDoubtValidator = [
     body("title")
@@ -19,11 +19,6 @@ const createDoubtValidator = [
         .withMessage("Subject ID is required")
         .isMongoId()
         .withMessage("Invalid subject ID"),
-    body("semester")
-        .notEmpty()
-        .withMessage("Semester is required")
-        .isInt({ min: 1, max: 12 })
-        .withMessage("Semester must be an integer between 1 and 12"),
     body("topic")
         .optional()
         .trim()
@@ -35,7 +30,33 @@ const createDoubtValidator = [
         .withMessage("Tags must be an array of strings")
 ];
 
+const doubtIdParamValidator = [
+    param("id")
+        .isMongoId()
+        .withMessage("Enter a valid doubt ID"),
+];
+
+const getDoubtsValidator = [
+    query("subjectId")
+        .optional()
+        .isMongoId()
+        .withMessage("Subject ID must be a valid MongoDB ObjectId"),
+    query("status")
+        .optional()
+        .isIn(["draft", "pending", "in_progress", "resolved", "closed"])
+        .withMessage("Invalid status value"),
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be a positive integer"),
+    query("limit")
+        .optional()
+        .isInt({ min: 1, max: 50 })
+        .withMessage("Limit must be between 1 and 50"),
+];
+
 const updateDoubtStatusValidator = [
+    ...doubtIdParamValidator,
     body("status")
         .trim()
         .notEmpty()
@@ -44,4 +65,4 @@ const updateDoubtStatusValidator = [
         .withMessage("Invalid status value")
 ];
 
-export { createDoubtValidator, updateDoubtStatusValidator };
+export { createDoubtValidator, doubtIdParamValidator, getDoubtsValidator, updateDoubtStatusValidator };

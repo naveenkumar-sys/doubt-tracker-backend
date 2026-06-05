@@ -3,6 +3,8 @@ import { createUser, updateUserStatus } from '../controllers/userController.js';
 import { createUserValidator } from '../validators/userValidator.js';
 import authenticate from '../middlewares/Authentication.js';
 import { authorizeAdmin, authorizeAdminOrHod } from '../middlewares/Authorization.js';
+import validateRequest from '../middlewares/Validation.js';
+import { updateUserStatusValidator } from '../validators/userValidator.js';
 
 
 const router = express.Router();
@@ -13,7 +15,7 @@ const router = express.Router();
 //After authorization, the createUserValidator middleware is applied to validate the incoming request body to ensure that all required fields are present and valid according to the specified schema, this helps to catch any errors early in the request processing pipeline.
 //Finally, the createUser controller function is executed to handle the actual creation of the user in the database, this controller interacts with the user model to create a new user document with the provided information, this includes creating the user's credentials, assigning them a role and department, and any other relevant information required for user management.
 
-router.post("/register", authenticate, authorizeAdminOrHod, createUserValidator, createUser);
-router.patch("/updateUser-status/:id", authenticate, authorizeAdmin, updateUserStatus);
+router.post("/register", authenticate, authorizeAdminOrHod, createUserValidator, validateRequest, createUser);
+router.patch("/updateUser-status/:id", authenticate, authorizeAdmin, updateUserStatusValidator, validateRequest, updateUserStatus);
 
 export default router;

@@ -1,10 +1,25 @@
 import Doubt from "../models/doubtsModel.js";
+import Subject from "../models/subjectsModel.js";
 
 // Create a new doubt (Only students)
 export const createDoubt = async (req, res, next) => {
     try {
-        const { title, description, subjectId, semester, tags, topic } = req.body;
+        const { title, description, subjectId, tags, topic } = req.body;
         const loggedInUser = req.user;
+        const subject = await Subject.findOne({
+            _id: subjectId,
+            collegeId: loggedInUser.collegeId,
+            departmentId: loggedInUser.departmentId,
+            semester: loggedInUser.semester,
+            isActive: true,
+        });
+
+        if (!subject) {
+            return res.status(404).json({
+                success: false,
+                message: "Active subject not found for your department and semester",
+            });
+        }
 
         const newDoubt = await Doubt.create({
             title,
@@ -13,7 +28,7 @@ export const createDoubt = async (req, res, next) => {
             collegeId: loggedInUser.collegeId,
             departmentId: loggedInUser.departmentId,
             subjectId,
-            semester,
+            semester: loggedInUser.semester,
             tags,
             topic,
             status: "pending"
@@ -46,10 +61,12 @@ export const getDoubts = async (req, res, next) => {
 
         // Base filter: only show doubts in the user's college and department
         //creating a filters in an object  by using the logged in user's college and department id
-        const filter = {
-            collegeId: loggedInUser.collegeId,
-            departmentId: loggedInUser.departmentId,
-        };
+        const filter = {};
+
+        if (loggedInUser.role !== "admin") {
+            filter.collegeId = loggedInUser.collegeId;
+            filter.departmentId = loggedInUser.departmentId;
+        }
 
         //Add subject filter if provided 
         if (subjectId) filter.subjectId = subjectId;
@@ -122,8 +139,15 @@ export const getDoubtById = async (req, res, next) => {
         const { id } = req.params;
         const loggedInUser = req.user;
 
+        const doubtFilter = { _id: id };
+
+        if (loggedInUser.role !== "admin") {
+            doubtFilter.collegeId = loggedInUser.collegeId;
+            doubtFilter.departmentId = loggedInUser.departmentId;
+        }
+
         const doubt = await Doubt.findOneAndUpdate(
-            { _id: id, collegeId: loggedInUser.collegeId }, // condition to find the doubt and check if it is from the same college
+            doubtFilter,
             { $inc: { viewCount: 1 } }, // increment the view count this is for the analytics   later to displat  count 
             { new: true } // return the updated document
         )
@@ -163,6 +187,14 @@ export const updateDoubtStatus = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Doubt not found" });
         }
 
+        if (loggedInUser.role !== "admin" && findDoubt.collegeId.toString() !== loggedInUser.collegeId.toString()) {
+            return res.status(403).json({ success: false, message: "Not authorized to update this doubt" });
+        }
+
+        if (["hod", "faculty"].includes(loggedInUser.role) && findDoubt.departmentId.toString() !== loggedInUser.departmentId.toString()) {
+            return res.status(403).json({ success: false, message: "Not authorized to update doubt outside your department" });
+        }
+
 
         // Authorization check:
         // Student can only update their own doubt 
@@ -170,9 +202,21 @@ export const updateDoubtStatus = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Not authorized to update this doubt" });
         }
 
+        if (loggedInUser.role === "student" && status !== "closed") {
+            return res.status(403).json({ success: false, message: "Students can only close their own resolved doubts" });
+        }
+
+        if (loggedInUser.role === "student" && findDoubt.status !== "resolved") {
+            return res.status(400).json({ success: false, message: "Only resolved doubts can be closed by students" });
+        }
+
         // Faculty can only update doubts in their own department
-        if (loggedInUser.role === 'faculty' && findDoubt.departmentId.toString() !== loggedInUser.departmentId.toString()) {
-            return res.status(403).json({ success: false, message: "Not authorized to update doubt outside your department" });
+        if (loggedInUser.role === 'faculty' && !loggedInUser.subjectIds.some((subjectIdValue) => subjectIdValue.toString() === findDoubt.subjectId.toString())) {
+            return res.status(403).json({ success: false, message: "Not authorized to update doubts for this subject" });
+        }
+
+        if (loggedInUser.role === "faculty" && !["in_progress", "resolved"].includes(status)) {
+            return res.status(403).json({ success: false, message: "Faculty can only mark doubts as in progress or resolved" });
         }
         // ==========================================
         // 1. Handling the Resolution Timestamp

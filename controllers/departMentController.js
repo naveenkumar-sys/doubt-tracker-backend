@@ -1,10 +1,20 @@
 import Department from "../models/departmentModel.js";
+import College from "../models/collegeModel.js";
 
 
 
 const createDepartment = async (req, res, next) => {
   try {
     const { name, code, collegeId } = req.body;
+    const college = await College.findOne({ _id: collegeId, isActive: true });
+
+    if (!college) {
+      return res.status(404).json({
+        success: false,
+        message: "Active college not found",
+      });
+    }
+
     // Check if a department with the same name or code already exists in the same college by trimming and converting to uppercase for code with $or operator is used to check for either condition
     // It checks either the name matches or the code matches in the database for the same college if either condition is true it will return the existing department otherwise it will proceed to create a new department
     const existingDepartment = await Department.findOne({

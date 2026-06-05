@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 // Validation for creating a user
 // 1. name: required, string, 2-160 characters
 // 2. email: required, valid email format, unique in the database
@@ -36,8 +36,29 @@ const createUserValidator = [
         .withMessage("Role is required")
         .isIn(["admin", "hod", "faculty", "student"])
         .withMessage("Role must be either 'admin', 'hod', 'faculty' or 'student'"),
+    body("collegeId")
+        .optional()
+        .isMongoId()
+        .withMessage("College ID must be a valid MongoDB ObjectId"),
+    body("departmentId")
+        .optional()
+        .isMongoId()
+        .withMessage("Department ID must be a valid MongoDB ObjectId"),
+    body("semester")
+        .optional()
+        .isInt({ min: 1, max: 12 })
+        .withMessage("Semester must be an integer between 1 and 12"),
+];
+
+const updateUserStatusValidator = [
+    param("id")
+        .isMongoId()
+        .withMessage("Enter a valid user ID"),
+    body("isActive")
+        .isBoolean()
+        .withMessage("isActive must be true or false"),
 ];
 
 // Export the createUserValidator for use in route definitions, this validator will be used as middleware in the routes that handle user-related operations, ensuring that incoming requests contain valid data before they reach the controller logic.
 
-export { createUserValidator };
+export { createUserValidator, updateUserStatusValidator };

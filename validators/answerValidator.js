@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 const createAnswerValidator = [
     // Validate that the doubtId is provided and is a valid MongoDB ID
@@ -24,4 +24,16 @@ const createAnswerValidator = [
         .withMessage("Attachments must be an array")
 ];
 
-export { createAnswerValidator };
+const doubtIdParamValidator = [
+    param("doubtId")
+        .isMongoId()
+        .withMessage("Enter a valid doubt ID"),
+];
+
+const answerIdParamValidator = [
+    param("answerId")
+        .isMongoId()
+        .withMessage("Enter a valid answer ID"),
+];
+
+export { answerIdParamValidator, createAnswerValidator, doubtIdParamValidator };
