@@ -32,7 +32,7 @@ export const createAnswer = async (req, res, next) => {
         const newAnswer = await Answer.create({
             collegeId: doubt.collegeId,
             departmentId: doubt.departmentId,
-            facultyId: loggedInUser._id,             // Auto-assign faculty's own user ID
+            facultyId: loggedInUser._id,          
             doubtId: doubtId,
             content: content,
             attachments: attachments || []

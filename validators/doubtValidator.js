@@ -41,6 +41,10 @@ const getDoubtsValidator = [
         .optional()
         .isMongoId()
         .withMessage("Subject ID must be a valid MongoDB ObjectId"),
+    query("studentId")
+        .optional()
+        .isMongoId()
+        .withMessage("Student ID must be a valid MongoDB ObjectId"),
     query("status")
         .optional()
         .isIn(["draft", "pending", "in_progress", "resolved", "closed"])

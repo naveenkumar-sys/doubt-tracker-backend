@@ -36,6 +36,7 @@ const createSubject = async (req, res, next) => {
 const getSubjectsByDepartment = async (req, res, next) => {
     try {
         const { departmentId } = req.params;
+        const { semester } = req.query;
 
         const loggedInUser = req.user;
 
@@ -50,6 +51,14 @@ const getSubjectsByDepartment = async (req, res, next) => {
 
         if (loggedInUser.role !== "admin") {
             filter.collegeId = loggedInUser.collegeId;
+        }
+
+        if (semester) {
+            filter.semester = parseInt(semester);
+        }
+
+        if (["student", "faculty"].includes(loggedInUser.role)) {
+            filter.isActive = true;
         }
 
         const subjects = await Subject.find(filter).sort({ createdAt: -1 });

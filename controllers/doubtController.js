@@ -10,7 +10,6 @@ export const createDoubt = async (req, res, next) => {
             _id: subjectId,
             collegeId: loggedInUser.collegeId,
             departmentId: loggedInUser.departmentId,
-            semester: loggedInUser.semester,
             isActive: true,
         });
 
@@ -56,7 +55,7 @@ export const getDoubts = async (req, res, next) => {
         //             status=pending
         //             page=2
         //             limit=10
-        const { subjectId, status, search, page = 1, limit = 10 } = req.query;
+        const { subjectId, studentId, status, search, page = 1, limit = 10 } = req.query;
         const loggedInUser = req.user;
 
         // Base filter: only show doubts in the user's college and department
@@ -70,8 +69,31 @@ export const getDoubts = async (req, res, next) => {
 
         //Add subject filter if provided 
         if (subjectId) filter.subjectId = subjectId;
+        // Faculty can only see doubts in their assigned subjects
+        if (loggedInUser.role === "faculty" && loggedInUser.subjectIds?.length > 0) {
+            if (subjectId) {
+                if (!loggedInUser.subjectIds.some(id => id.toString() === subjectId)) {
+                    return res.status(403).json({
+                        success: false,
+                        message: "Not authorized to view doubts for this subject",
+                    });
+                }
+            } else {
+                filter.subjectId = { $in: loggedInUser.subjectIds };
+            }
+        }
         //Add status filter if provided 
         if (status) filter.status = status;
+        //Add studentId filter if provided - students can only see their own
+        if (studentId) {
+            if (loggedInUser.role === "student" && studentId !== loggedInUser._id.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Not authorized to view other students' doubts",
+                });
+            }
+            filter.studentId = studentId;
+        }
 
         //Add search filter if provided using text search operator in mongodb and search in title and description
         if (search) {

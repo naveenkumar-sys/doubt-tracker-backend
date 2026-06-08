@@ -1,4 +1,5 @@
 import User from '../models/UserModel.js';
+import Subject from '../models/subjectsModel.js';
 import bcrypt from 'bcrypt';
 import College from '../models/collegeModel.js';
 import Department from '../models/departmentModel.js';
@@ -74,13 +75,33 @@ export const createUser = async (req, res, next) => {
             semester: role === 'student' ? semester : undefined,
         });
 
-        const safeUser = user.toObject();
+        if (role === 'faculty' && req.body.subjectIds && Array.isArray(req.body.subjectIds) && req.body.subjectIds.length > 0) {
+            const subjects = await Subject.find({ _id: { $in: req.body.subjectIds }, collegeId, departmentId });
+            const validIds = subjects.map((s) => s._id);
+            if (validIds.length > 0) {
+                await User.updateOne(
+                    { _id: user._id },
+                    { $push: { subjectIds: { $each: validIds } } }
+                );
+                await Subject.updateMany(
+                    { _id: { $in: validIds } },
+                    { $addToSet: { facultyIds: user._id } }
+                );
+            }
+        }
+
+        const updatedUser = await User.findById(user._id);
+        const safeUser = updatedUser.toObject();
         delete safeUser.password;
+
+        const createdSubjects = updatedUser.subjectIds.length > 0
+            ? await Subject.find({ _id: { $in: updatedUser.subjectIds } }).select('name code semester')
+            : [];
 
         return res.status(201).json({
             success: true,
             message: 'User created successfully',
-            data: { user: safeUser },
+            data: { user: safeUser, subjects: createdSubjects },
         });
     } catch (error) {
         next(error);

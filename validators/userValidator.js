@@ -48,6 +48,14 @@ const createUserValidator = [
         .optional()
         .isInt({ min: 1, max: 12 })
         .withMessage("Semester must be an integer between 1 and 12"),
+    body("subjectIds")
+        .optional()
+        .isArray({ min: 1 })
+        .withMessage("Subject IDs must be a non-empty array"),
+    body("subjectIds.*")
+        .if(body("subjectIds").exists())
+        .isMongoId()
+        .withMessage("Each subject ID must be a valid MongoDB ObjectId"),
 ];
 
 const updateUserStatusValidator = [
