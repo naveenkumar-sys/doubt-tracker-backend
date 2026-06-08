@@ -44,18 +44,27 @@ const createRefreshToken = (userId) => {
   });
 };
 // Helper function to format user data for response, this function takes a user object as input and returns a formatted user object with selected fields that are safe to include in API responses, this helps to ensure that sensitive information such as the user's password is not included in the response while still providing relevant user information to the client.
-const formatUser = (user) => ({
-  id: user._id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  collegeId: user.collegeId,
-  departmentId: user.departmentId,
-  semester: user.semester,
-  subjectIds: user.subjectIds,
-  isActive: user.isActive,
-  lastLoginAt: user.lastLoginAt,
-});
+const formatUser = (user) => {
+  const collegeId = user.collegeId?._id || user.collegeId;
+  const departmentId = user.departmentId?._id || user.departmentId;
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    collegeId,
+    departmentId,
+    collegeName: user.collegeId?.name || undefined,
+    collegeCode: user.collegeId?.code || undefined,
+    departmentName: user.departmentId?.name || undefined,
+    departmentCode: user.departmentId?.code || undefined,
+    semester: user.semester,
+    subjectIds: user.subjectIds,
+    isActive: user.isActive,
+    lastLoginAt: user.lastLoginAt,
+  };
+};
 // Login controller function that handles user login requests, it validates the user's email and password, checks if the user account is active, updates the last login time, creates access and refresh tokens, clears login attempts for the user's IP address, sets the tokens in cookies, and returns a success response with the user data and access token, this function is responsible for authenticating users and providing them with the necessary tokens to access protected routes in the application.
 const login = async (req, res, next) => {
   try {
@@ -88,11 +97,15 @@ const login = async (req, res, next) => {
     res.cookie("accessToken", accessToken, accessTokenCookieOptions);
     res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
+    const populatedUser = await User.findById(user._id)
+      .populate("collegeId", "name code")
+      .populate("departmentId", "name code");
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
       data: {
-        user: formatUser(user),
+        user: formatUser(populatedUser),
         accessToken,
       },
     });
@@ -101,14 +114,22 @@ const login = async (req, res, next) => {
   }
 };
 
-//Controller function to get the current authenticated user's information, this function assumes that the authenticate middleware has already run and attached the authenticated user object to req.user, it returns a success response with the formatted user data, this allows clients to retrieve the current user's information after they have logged in and have a valid access token, providing them with their profile details and other relevant information.
-const getCurrentUser = (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      user: formatUser(req.user),
-    },
-  });
+//Controller function to get the current authenticated user's information with college and department details populated, this function assumes that the authenticate middleware has already run and attached the authenticated user object to req.user, it fetches the user again with populated college and department references to provide the user with their college and department names along with other relevant information.
+const getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate("collegeId", "name code")
+      .populate("departmentId", "name code");
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: formatUser(user),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Controller function to handle user logout, this function clears the access and refresh tokens from the user's cookies and returns a success response, this allows users to securely log out of the application and invalidate their active sessions.
