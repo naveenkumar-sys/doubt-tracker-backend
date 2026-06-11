@@ -54,6 +54,10 @@ export const createAnswer = async (req, res, next) => {
             doubt.status = "resolved";
             doubt.assignedFacultyId = loggedInUser._id;
             doubt.resolvedAt = new Date();
+            // Clear resubmit reason since it's been addressed
+            if (doubt.resubmitReason) {
+                doubt.resubmitReason = undefined;
+            }
             doubtNeedsSaving = true;
         }
 

@@ -47,7 +47,7 @@ const getDoubtsValidator = [
         .withMessage("Student ID must be a valid MongoDB ObjectId"),
     query("status")
         .optional()
-        .isIn(["draft", "pending", "in_progress", "resolved", "closed"])
+        .isIn(["draft", "pending", "in_progress", "resolved", "closed", "revision_requested"])
         .withMessage("Invalid status value"),
     query("page")
         .optional()
@@ -65,8 +65,17 @@ const updateDoubtStatusValidator = [
         .trim()
         .notEmpty()
         .withMessage("Status is required")
-        .isIn(["draft", "pending", "in_progress", "resolved", "closed"])
+        .isIn(["draft", "pending", "in_progress", "resolved", "closed", "revision_requested"])
         .withMessage("Invalid status value")
 ];
 
-export { createDoubtValidator, doubtIdParamValidator, getDoubtsValidator, updateDoubtStatusValidator };
+const resubmitDoubtValidator = [
+    ...doubtIdParamValidator,
+    body("reason")
+        .optional()
+        .trim()
+        .isLength({ max: 2000 })
+        .withMessage("Reason cannot exceed 2000 characters"),
+];
+
+export { createDoubtValidator, doubtIdParamValidator, getDoubtsValidator, updateDoubtStatusValidator, resubmitDoubtValidator };

@@ -40,7 +40,7 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the Doubt Tracker API!");
+  res.send("Welcome to the ClarifyHub API!");
 });
 
 app.use("/api/auth", authRoutes);

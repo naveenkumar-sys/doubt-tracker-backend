@@ -1,5 +1,6 @@
 import Doubt from "../models/doubtsModel.js";
 import Subject from "../models/subjectsModel.js";
+import { suggest, rebuildIndex } from "../services/fuzzySearch.js";
 
 // Create a new doubt (Only students)
 export const createDoubt = async (req, res, next) => {
@@ -32,6 +33,8 @@ export const createDoubt = async (req, res, next) => {
             topic,
             status: "pending"
         });
+
+        rebuildIndex();
 
         return res.status(201).json({
             success: true,
@@ -129,6 +132,14 @@ export const getDoubts = async (req, res, next) => {
         // finding total number of doubts based on the filter 
         const total = await Doubt.countDocuments(filter);
 
+        let suggestion = null;
+        if (search && total === 0) {
+          suggestion = suggest(search, {
+            collegeId: loggedInUser.collegeId,
+            departmentId: loggedInUser.departmentId,
+          });
+        }
+
         // return the doubts and pagination information in the response
         // pagination information is calculated based on the total number of doubts and the limit and page
         // this is a very important part of the query
@@ -147,7 +158,8 @@ export const getDoubts = async (req, res, next) => {
                     page: parseInt(page),
                     limit: parseInt(limit),
                     pages: Math.ceil(total / parseInt(limit))
-                }
+                },
+                ...(suggestion && { suggestion }),
             },
         });
     } catch (error) {
@@ -186,6 +198,44 @@ export const getDoubtById = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             data: { doubt },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Resubmit a doubt (student requests re-answer from faculty)
+export const resubmitDoubt = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const loggedInUser = req.user;
+
+        const findDoubt = await Doubt.findById(id);
+
+        if (!findDoubt) {
+            return res.status(404).json({ success: false, message: "Doubt not found" });
+        }
+
+        if (findDoubt.studentId.toString() !== loggedInUser._id.toString()) {
+            return res.status(403).json({ success: false, message: "Only the student who asked the doubt can resubmit" });
+        }
+
+        if (!["resolved", "closed"].includes(findDoubt.status)) {
+            return res.status(400).json({ success: false, message: "Only resolved or closed doubts can be resubmitted" });
+        }
+
+        findDoubt.status = "revision_requested";
+        findDoubt.resubmitReason = reason || "";
+        findDoubt.resubmitCount = (findDoubt.resubmitCount || 0) + 1;
+        findDoubt.resolvedAt = null;
+
+        await findDoubt.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Resubmitted successfully. Faculty will re-answer your doubt.",
+            data: { doubt: findDoubt },
         });
     } catch (error) {
         next(error);

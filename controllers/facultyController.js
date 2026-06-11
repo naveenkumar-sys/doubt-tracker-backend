@@ -29,6 +29,37 @@ export const getFacultyForHod = async (req, res, next) => {
     }
 };
 
+//get faculty by id
+export const getFacultyById = async (req, res, next) => {
+    try{
+        const { id } = req.params;
+
+        const faculty = await User.findOne({ _id: id, role: 'faculty' });
+        
+        if (!faculty) {
+            return res.status(404).json({
+                success: false,
+                message: "Faculty not found",
+            });
+        }
+        // Only allow fetching faculty within the same department and college as the logged-in HOD
+        if (faculty.collegeId.toString() !== req.user.collegeId.toString() ||
+            faculty.departmentId.toString() !== req.user.departmentId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to view faculty outside your department",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: { faculty },
+        });
+        
+    } catch (error) {
+        next(error);
+    }
+}
 
 //update faculty status
 const updateFacultyStatus = async (req, res, next) => {

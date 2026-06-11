@@ -63,7 +63,7 @@ const doubtSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "pending", "in_progress", "resolved", "closed"],
+      enum: ["draft", "pending", "in_progress", "resolved", "closed", "revision_requested"],
       default: "pending",
       index: true,
     },
@@ -94,6 +94,16 @@ const doubtSchema = new mongoose.Schema(
     },
     resolvedAt: {
       type: Date,
+    },
+    resubmitReason: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
+    },
+    resubmitCount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   { timestamps: true }
